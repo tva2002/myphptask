@@ -28,3 +28,6 @@ To build/rebuild containers
 
 ```docker-compose build```
 
+
+Open http://localhost:8090/
+     http://localhost:8090/documentation/ 
