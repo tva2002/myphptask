@@ -1,0 +1,73 @@
+version: "3.3"
+services:
+
+  db:
+    image: mariadb
+    container_name: web-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - test
+
+  app:
+    depends_on:
+      - db
+    links:
+      - db:db
+    build:
+      args:
+        user: sammy
+        uid: 1000
+      context: ./app
+      dockerfile: ./Dockerfile
+    image: webtest
+    container_name: web-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./app:/var/www
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - test
+
+  swaggerui:
+    image: swaggerapi/swagger-ui
+    container_name: swaggerui
+    volumes:
+      - ./swagger:/usr/share/nginx/html/swagger
+    environment:
+      API_URL: swagger/petstore.yaml
+      BASE_URL: /documentation
+    networks:
+      - test
+
+
+  nginx:
+    image: nginx:alpine
+    container_name: web-nginx
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8090:80
+    volumes:
+      - ./app:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    links:
+      - swaggerui
+    networks:
+      - test
+
+networks:
+  test:
+    driver: bridge
