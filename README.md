@@ -16,6 +16,8 @@ I have committed to this repo only one file to `app/` path, only to show that it
 
 #### Linux
 
+cp env.dist .env
+
 ```docker-compose up```
 
 To run containers in background use option -d
